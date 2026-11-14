@@ -1,0 +1,123 @@
+
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My3D Studio</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: #101522;
+  color: white;
+  font-family: Arial, sans-serif;
+  min-height: 100vh;
+  padding: 25px 18px;
+}
+main { max-width: 520px; margin: auto; }
+header { text-align: center; padding: 35px 0; }
+h1 { font-size: 36px; margin: 0 0 12px; }
+p { color: #aebbd0; line-height: 1.6; }
+.card {
+  background: #1b2538;
+  border: 1px solid #35445f;
+  border-radius: 20px;
+  padding: 24px;
+}
+.upload {
+  border: 2px dashed #7085aa;
+  border-radius: 16px;
+  padding: 35px 15px;
+  text-align: center;
+  cursor: pointer;
+}
+.upload strong { font-size: 20px; }
+input { display: block; margin: 18px auto 0; max-width: 100%; }
+button {
+  width: 100%;
+  border: 0;
+  border-radius: 12px;
+  padding: 17px;
+  margin-top: 20px;
+  background: #718cff;
+  color: #101522;
+  font-size: 17px;
+  font-weight: bold;
+}
+button:disabled { opacity: .5; }
+#preview {
+  display: none;
+  width: 100%;
+  max-height: 300px;
+  object-fit: contain;
+  margin-top: 20px;
+  border-radius: 12px;
+}
+#status { text-align: center; }
+footer {
+  text-align: center;
+  margin-top: 25px;
+  color: #71809b;
+  font-size: 13px;
+}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>My3D Studio</h1>
+  <p>מתמונה אחת למודל תלת־ממדי</p>
+</header>
+
+<section class="card">
+  <label class="upload" for="photo">
+    <strong>📸 העלאת תמונה</strong>
+    <p>בחר תמונה של החפץ שתרצה להדפיס</p>
+    JPG · PNG · WEBP
+    <input id="photo" type="file"
+      accept="image/jpeg,image/png,image/webp">
+  </label>
+
+  <img id="preview" alt="תצוגה מקדימה">
+
+  <button id="generate" disabled>
+    ✨ יצירת מודל תלת־ממדי
+  </button>
+
+  <p id="status">בחר תמונה כדי להתחיל</p>
+</section>
+
+<footer>
+  My3D Studio · Designed for Bambu Lab A1
+</footer>
+</main>
+
+<script>
+const photo = document.getElementById("photo");
+const preview = document.getElementById("preview");
+const button = document.getElementById("generate");
+const status = document.getElementById("status");
+
+photo.addEventListener("change", () => {
+  const file = photo.files[0];
+  if (!file) return;
+
+  if (!["image/jpeg","image/png","image/webp"].includes(file.type)) {
+    status.textContent = "סוג הקובץ אינו נתמך";
+    button.disabled = true;
+    return;
+  }
+
+  preview.src = URL.createObjectURL(file);
+  preview.style.display = "block";
+  button.disabled = false;
+  status.textContent = "התמונה מוכנה. מנוע ה-AI יחובר בשלב הבא.";
+});
+
+button.addEventListener("click", () => {
+  status.textContent = "העלאת התמונה עובדת. יצירת מודל AI עדיין בפיתוח.";
+});
+</script>
+</body>
+</html>
