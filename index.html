@@ -1,66 +1,30 @@
-
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>My3D Studio</title>
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
 <style>
 * { box-sizing: border-box; }
-body {
-  margin: 0;
-  background: #101522;
-  color: white;
-  font-family: Arial, sans-serif;
-  min-height: 100vh;
-  padding: 25px 18px;
-}
-main { max-width: 520px; margin: auto; }
-header { text-align: center; padding: 35px 0; }
-h1 { font-size: 36px; margin: 0 0 12px; }
-p { color: #aebbd0; line-height: 1.6; }
-.card {
-  background: #1b2538;
-  border: 1px solid #35445f;
-  border-radius: 20px;
-  padding: 24px;
-}
-.upload {
-  border: 2px dashed #7085aa;
-  border-radius: 16px;
-  padding: 35px 15px;
-  text-align: center;
-  cursor: pointer;
-}
-.upload strong { font-size: 20px; }
-input { display: block; margin: 18px auto 0; max-width: 100%; }
-button {
-  width: 100%;
-  border: 0;
-  border-radius: 12px;
-  padding: 17px;
-  margin-top: 20px;
-  background: #718cff;
-  color: #101522;
-  font-size: 17px;
-  font-weight: bold;
-}
-button:disabled { opacity: .5; }
-#preview {
-  display: none;
-  width: 100%;
-  max-height: 300px;
-  object-fit: contain;
-  margin-top: 20px;
-  border-radius: 12px;
-}
-#status { text-align: center; }
-footer {
-  text-align: center;
-  margin-top: 25px;
-  color: #71809b;
-  font-size: 13px;
-}
+body { margin:0; background:#101522; color:white; font-family:Arial,sans-serif; min-height:100vh; padding:25px 18px; }
+main { max-width:620px; margin:auto; }
+header { text-align:center; padding:35px 0; }
+h1 { font-size:36px; margin:0 0 12px; }
+p { color:#aebbd0; line-height:1.6; }
+.card { background:#1b2538; border:1px solid #35445f; border-radius:20px; padding:24px; }
+.upload { display:block; border:2px dashed #7085aa; border-radius:16px; padding:35px 15px; text-align:center; cursor:pointer; }
+.upload strong { font-size:20px; }
+input { display:block; margin:18px auto 0; max-width:100%; }
+button { width:100%; border:0; border-radius:12px; padding:17px; margin-top:20px; background:#718cff; color:#101522; font-size:17px; font-weight:bold; cursor:pointer; }
+button:disabled { opacity:.5; cursor:not-allowed; }
+#preview { display:none; width:100%; max-height:300px; object-fit:contain; margin-top:20px; border-radius:12px; }
+#status { text-align:center; min-height:24px; }
+#viewerWrap { display:none; margin-top:22px; }
+model-viewer { width:100%; height:420px; background:#111a2a; border-radius:14px; --poster-color: transparent; }
+#download { display:none; text-align:center; color:#aebdff; margin-top:14px; }
+footer { text-align:center; margin-top:25px; color:#71809b; font-size:13px; }
+.small { font-size:12px; color:#8796ad; text-align:center; }
 </style>
 </head>
 <body>
@@ -69,54 +33,116 @@ footer {
   <h1>My3D Studio</h1>
   <p>מתמונה אחת למודל תלת־ממדי</p>
 </header>
-
 <section class="card">
   <label class="upload" for="photo">
     <strong>📸 העלאת תמונה</strong>
-    <p>בחר תמונה של החפץ שתרצה להדפיס</p>
+    <p>בחר תמונה של החפץ שתרצה להפוך למודל</p>
     JPG · PNG · WEBP
-    <input id="photo" type="file"
-      accept="image/jpeg,image/png,image/webp">
+    <input id="photo" type="file" accept="image/jpeg,image/png,image/webp">
   </label>
-
   <img id="preview" alt="תצוגה מקדימה">
-
-  <button id="generate" disabled>
-    ✨ יצירת מודל תלת־ממדי
-  </button>
-
+  <button id="generate" disabled>✨ יצירת מודל תלת־ממדי</button>
   <p id="status">בחר תמונה כדי להתחיל</p>
+  <p class="small">מומלץ להשתמש בתמונה ברורה, עם החפץ במרכז וברקע פשוט. יצירת המודל עשויה לקחת כמה דקות.</p>
+  <div id="viewerWrap">
+    <h3>המודל שלך מוכן 🎉</h3>
+    <model-viewer id="viewer" camera-controls auto-rotate shadow-intensity="1" exposure="1"></model-viewer>
+    <a id="download" href="#" target="_blank" rel="noopener">פתיחת קובץ GLB להורדה</a>
+    <p class="small">אפשר לגרור כדי לסובב ולגלול כדי להתקרב. לפני הדפסה צריך לבדוק את המודל בתוכנת חיתוך ולהכין אותו להדפסה.</p>
+  </div>
 </section>
-
-<footer>
-  My3D Studio · Designed for Bambu Lab A1
-</footer>
+<footer>My3D Studio · Designed for Bambu Lab A1</footer>
 </main>
-
 <script>
+const API = "https://my3d-studio-api.zismanshai.workers.dev";
 const photo = document.getElementById("photo");
 const preview = document.getElementById("preview");
 const button = document.getElementById("generate");
 const status = document.getElementById("status");
+const viewerWrap = document.getElementById("viewerWrap");
+const viewer = document.getElementById("viewer");
+const download = document.getElementById("download");
+let selectedFile = null;
 
 photo.addEventListener("change", () => {
   const file = photo.files[0];
-  if (!file) return;
-
+  selectedFile = null;
+  viewerWrap.style.display = "none";
+  if (!file) { button.disabled = true; return; }
   if (!["image/jpeg","image/png","image/webp"].includes(file.type)) {
-    status.textContent = "סוג הקובץ אינו נתמך";
+    status.textContent = "סוג הקובץ אינו נתמך. בחר JPG, PNG או WEBP.";
     button.disabled = true;
     return;
   }
-
+  if (file.size > 8 * 1024 * 1024) {
+    status.textContent = "התמונה גדולה מדי. יש לבחור קובץ עד 8MB.";
+    button.disabled = true;
+    return;
+  }
+  selectedFile = file;
   preview.src = URL.createObjectURL(file);
   preview.style.display = "block";
   button.disabled = false;
-  status.textContent = "התמונה מוכנה. מנוע ה-AI יחובר בשלב הבא.";
+  status.textContent = "התמונה מוכנה. אפשר ליצור מודל.";
 });
 
-button.addEventListener("click", () => {
-  status.textContent = "העלאת התמונה עובדת. יצירת מודל AI עדיין בפיתוח.";
+function fileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error("לא הצלחנו לקרוא את התמונה."));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function waitForModel(requestId) {
+  for (let attempt = 0; attempt < 90; attempt++) {
+    await new Promise(resolve => setTimeout(resolve, 4000));
+    const response = await fetch(API + "/status/" + encodeURIComponent(requestId));
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || data.message || "שגיאה בבדיקת מצב המודל.");
+    const state = String(data.status || data.state || "").toUpperCase();
+    const modelUrl = data.model_glb || data.model_glb_url || data.glb_url || data.output?.model_glb;
+    if (modelUrl || state === "COMPLETED") {
+      if (!modelUrl) throw new Error("המודל הסתיים, אבל כתובת קובץ ה-GLB לא התקבלה.");
+      return modelUrl;
+    }
+    if (["FAILED","ERROR","CANCELLED"].includes(state)) {
+      throw new Error(data.error || data.error_message || "יצירת המודל נכשלה.");
+    }
+    status.textContent = "מייצרים את המודל... " + (attempt + 1) + "/90";
+  }
+  throw new Error("היצירה נמשכה זמן רב מדי. אפשר לנסות שוב מאוחר יותר.");
+}
+
+button.addEventListener("click", async () => {
+  if (!selectedFile) return;
+  button.disabled = true;
+  viewerWrap.style.display = "none";
+  status.textContent = "מכינים את התמונה ושולחים למנוע ה-AI...";
+  try {
+    const imageUrl = await fileAsDataUrl(selectedFile);
+    const response = await fetch(API + "/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ image_url: imageUrl })
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || data.message || "שליחת התמונה נכשלה.");
+    const requestId = data.request_id || data.requestId || data.id;
+    if (!requestId) throw new Error("לא התקבל מזהה משימה ממנוע ה-AI.");
+    status.textContent = "הבקשה התקבלה. מנוע ה-AI יוצר את המודל...";
+    const modelUrl = await waitForModel(requestId);
+    viewer.src = modelUrl;
+    download.href = modelUrl;
+    download.style.display = "block";
+    viewerWrap.style.display = "block";
+    status.textContent = "המודל מוכן!";
+  } catch (error) {
+    status.textContent = "לא הצלחנו ליצור את המודל: " + error.message;
+  } finally {
+    button.disabled = !selectedFile;
+  }
 });
 </script>
 </body>
